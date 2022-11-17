@@ -8,8 +8,6 @@
 #include <cmath>
 #include "NeuroFont.hpp"
 
-const std::string NeuroFont::ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789¿?¡!+-";
-
 void NeuroFont::setup(std::string const & fontName, int const size) {
   fontSize = size;
   fontSrc.load(fontName, fontSize, true, true, true);
@@ -36,16 +34,15 @@ void NeuroFont::mellow(Muse const & muse) {
 
 void NeuroFont::stress(Muse const & muse) {
   float theta = muse.getTheta();
-  float alpha = muse.getAlpha();
   float beta = muse.getBeta();
   float gamma = muse.getGamma();
+  float stress = muse.getStress();
 
-//  float stress = muse.calculateStressLevel(alpha, theta);
-//  noiseStep = ofMap(abs(beta), 0.0, 1.0, 1.0, 16.0);
-//  noiseScale = ofMap(stress, 0.0, 10.0, 1.0, 5.0);
-//
-//  offsetX = ofMap(abs(gamma), 0.0, 1.0, 0.03, 0.07);
-//  offsetY = ofMap(abs(theta), 0.0, 1.0, 0.04, 0.06);
+  noiseStep = ofMap(abs(beta), 0.0, 1.0, 1.0, 16.0);
+  noiseScale = ofMap(stress, -1.0, 1.0, 1.0, 5.0);
+  
+  offsetX = ofMap(abs(gamma), 0.0, 1.0, 0.03, 0.07);
+  offsetY = ofMap(abs(theta), 0.0, 1.0, 0.04, 0.06);
 }
 
 ofPath NeuroFont::getInitialPath(uint32_t character) {

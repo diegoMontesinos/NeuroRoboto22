@@ -11,9 +11,11 @@
 
 #include "ofxOsc.h"
 #include "MuseStatus.hpp"
+#include "MadgwickAHRS.hpp"
 
 using std::vector;
 using std::string;
+using glm::vec3;
 
 class Muse
 {
@@ -31,6 +33,8 @@ class Muse
     static const string TOUCHING;
     static const string BLINK;
     static const string JAW_CLENCH;
+    static const string GYROSCOPE;
+    static const string ACCELEROMETER;
 
     static const int MAX_LIST_SIZE;
     static const long STRESS_AVG_SIZE;
@@ -38,6 +42,11 @@ class Muse
     ofxOscReceiver receiver;
 
     MuseStatus status;
+
+    Madgwick filter;
+    unsigned long microsPerReading, microsPrevious;
+    float gyroX, gyroY, gyroZ;
+    float accX, accY, accZ;
 
     vector<float> deltaValues;
     vector<float> thetaValues;
@@ -50,11 +59,15 @@ class Muse
 
     vector<float> stressValues;
 
+    void updateRotation();
+
     void handleOSCMessage(ofxOscMessage const & msg);
     void handleBatteryMessage(ofxOscMessage const & msg);
     void handleTouchingMessage(ofxOscMessage const & msg);
     void handleHorseshoeMessage(ofxOscMessage const & msg);
     void handleDataMessage(ofxOscMessage const & msg, vector<float>& list);
+    void handleGyroscopeMessage(ofxOscMessage const & msg);
+    void handleAccelerometerMessage(ofxOscMessage const & msg);
 
     void updateStress();
     vector<float> calcRatios(vector<float> a, vector<float> b) const;
@@ -63,6 +76,8 @@ class Muse
     float getSignalValue(vector<float> const & signal, float defaultVal) const;
 
   public:
+    vec3 rotation;
+
     void setup();
     void update();
 

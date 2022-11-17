@@ -22,6 +22,8 @@ const string Muse::HORSESHOE = "/muse/elements/horseshoe";
 const string Muse::TOUCHING = "/muse/elements/touching_forehead";
 const string Muse::BLINK = "/muse/elements/blink";
 const string Muse::JAW_CLENCH = "/muse/elements/jaw_clench";
+const string Muse::ACCELEROMETER = "/muse/acc";
+const string Muse::GYROSCOPE = "/muse/gyro";
 
 const int Muse::MAX_LIST_SIZE = 120;
 const long Muse::STRESS_AVG_SIZE = 10;
@@ -29,14 +31,39 @@ const long Muse::STRESS_AVG_SIZE = 10;
 void Muse::setup() {
   ofLog() << "listening for osc messages on port " << OSC_PORT;
   receiver.setup(OSC_PORT);
+
+  filter.begin(25);
+  microsPerReading = 1000000 / 25;
+  microsPrevious = ofGetElapsedTimeMicros();
+
+  rotation.x = 0;
+  rotation.y = 0;
 }
 
 void Muse::update() {
+  updateRotation();
+
   while (receiver.hasWaitingMessages()) {
     ofxOscMessage m;
     receiver.getNextMessage(m);
 
     handleOSCMessage(m);
+  }
+}
+
+void Muse::updateRotation() {
+  unsigned long microsNow = ofGetElapsedTimeMicros();
+  if (microsNow - microsPrevious >= microsPerReading) {
+    filter.updateIMU(gyroX, gyroY, gyroZ, accX, accY, accZ);
+
+    float pitch = filter.getPitch() * -1.0;
+    float yaw = filter.getYaw() + 180;
+
+    float deltaPitch = (pitch - rotation.x) * 0.075;
+    float deltaYaw = (yaw - rotation.y) * 0.075;
+
+    rotation.x += deltaPitch;
+    rotation.y += deltaYaw;
   }
 }
 
@@ -54,12 +81,17 @@ void Muse::handleOSCMessage(ofxOscMessage const & message) {
   if (address == Muse::ALHA_ABS) handleDataMessage(message, alphaValues);
   if (address == Muse::BETA_ABS) handleDataMessage(message, betaValues);
   if (address == Muse::GAMMA_ABS) handleDataMessage(message, gammaValues);
-
+  
+  // Compute stress
+  if (address == Muse::BETA_ABS) updateStress();
+  
+  // Algorithms
   if (address == Muse::MELLOW) handleDataMessage(message, mellowValues);
   if (address == Muse::CONCENTRATION) handleDataMessage(message, concentrationValues);
 
-  // Compute stress
-  if (address == Muse::BETA_ABS) updateStress();
+  // Accelerometer and gyroscope
+  if (address == Muse::GYROSCOPE) handleGyroscopeMessage(message);
+  if (address == Muse::ACCELEROMETER) handleAccelerometerMessage(message);
 }
 
 void Muse::handleBatteryMessage(ofxOscMessage const & message) {
@@ -99,6 +131,22 @@ void Muse::handleDataMessage(ofxOscMessage const & message, vector<float>& list)
   }
 
   list.push_back(data);
+}
+
+void Muse::handleGyroscopeMessage(ofxOscMessage const & message) {
+  if (message.getTypeString() != "fff") return;
+
+  gyroX = message.getArgAsFloat(0);
+  gyroY = message.getArgAsFloat(1);
+  gyroZ = message.getArgAsFloat(2);
+}
+
+void Muse::handleAccelerometerMessage(ofxOscMessage const & message) {
+  if (message.getTypeString() != "fff") return;
+
+  accX = message.getArgAsFloat(0);
+  accY = message.getArgAsFloat(1);
+  accZ = message.getArgAsFloat(2);
 }
 
 float Muse::getSignalValue(vector<float> const & signal, float defaultValue) const {

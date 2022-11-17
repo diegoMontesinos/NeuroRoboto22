@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxAssimpModelLoader.h"
 #include "Muse.hpp"
 #include "NeuroFont.hpp"
 
@@ -11,7 +12,9 @@ class ofApp : public ofBaseApp
   private:
     Muse muse;
     NeuroFont neuroFont;
-  
+
+    ofxAssimpModelLoader headModel;
+
     ofPath initialPath;
     ofPath path;
 

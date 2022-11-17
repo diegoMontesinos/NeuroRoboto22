@@ -13,8 +13,6 @@
 class NeuroFont
 {
   private:
-    static const std::string ALPHABET;
-
     ofTrueTypeFont fontSrc;
     int fontSize;
 
