@@ -10,6 +10,9 @@
 class ofApp : public ofBaseApp
 {
   private:
+    // UI Sidebar
+    ofRectangle sidebarDimensions;
+
     Muse muse;
     NeuroFont neuroFont;
 
@@ -17,6 +20,10 @@ class ofApp : public ofBaseApp
 
     ofPath initialPath;
     ofPath path;
+
+    void updateDimensions();
+
+    void drawSidebar();
 
   public:
     void setup();
