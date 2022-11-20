@@ -41,8 +41,6 @@ class Muse
 
     ofxOscReceiver receiver;
 
-    MuseStatus status;
-
     Madgwick filter;
     unsigned long microsPerReading, microsPrevious;
     float gyroX, gyroY, gyroZ;
@@ -76,6 +74,8 @@ class Muse
     float getSignalValue(vector<float> const & signal, float defaultVal) const;
 
   public:
+    MuseStatus status;
+
     vec3 rotation;
 
     void setup();

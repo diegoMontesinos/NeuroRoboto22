@@ -7,23 +7,38 @@
 
 #define F_KEY 102
 
+using std::vector;
+
 class ofApp : public ofBaseApp
 {
   private:
-    // UI Sidebar
-    ofRectangle sidebarDimensions;
-
     Muse muse;
     NeuroFont neuroFont;
 
     ofxAssimpModelLoader headModel;
 
-    ofPath initialPath;
-    ofPath path;
+    // Title
+    glm::vec2 titlePos;
+    vector<ofPath> initialTitlePaths;
+    vector<ofPath> titlePaths;
+
+    // Info
+    glm::vec2 infoPos;
+    ofTrueTypeFont infoFont;
+
+    // Especimen
+    glm::vec2 specimenPos;
+    static const vector<string> SPECIMEN_ROWS;
+    vector<vector<ofPath>> initialSpecimenPaths;
+    vector<vector<ofPath>> specimenPaths;
 
     void updateDimensions();
 
-    void drawSidebar();
+    void drawTitle();
+    void drawInfo();
+    void drawHead();
+    void drawSpecimen();
+    void drawBadConnection();
 
   public:
     void setup();

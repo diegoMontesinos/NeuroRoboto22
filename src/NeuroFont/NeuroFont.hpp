@@ -37,7 +37,13 @@ class NeuroFont
     void setup(std::string const & fontName, int const size);
     void update(Muse const & muse);
 
-    ofPath getInitialPath(uint32_t character);
+    ofPath getCharPath(uint32_t character);
+    std::vector<ofPath> getStrPaths(std::string const & str);
 
     ofPath updatePath(ofPath const & path, float size);
+    std::vector<ofPath> updatePaths(std::vector<ofPath> const & paths, float size);
+
+    ofRectangle getStringBoundingBox(string const & str, float size);
+
+    ofTrueTypeFont getFontSrc() const { return fontSrc; }
 };

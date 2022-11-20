@@ -10,7 +10,8 @@
 
 void NeuroFont::setup(std::string const & fontName, int const size) {
   fontSize = size;
-  fontSrc.load(fontName, fontSize, true, true, true);
+  fontSrc.load(fontName, fontSize, false, false, true);
+  fontSrc.setLineHeight(116);
 }
 
 void NeuroFont::update(Muse const & muse) {
@@ -45,17 +46,24 @@ void NeuroFont::stress(Muse const & muse) {
   offsetY = ofMap(abs(theta), 0.0, 1.0, 0.04, 0.06);
 }
 
-ofPath NeuroFont::getInitialPath(uint32_t character) {
+ofPath NeuroFont::getCharPath(uint32_t character) {
   ofPath path = fontSrc.getCharacterAsPoints(character, true, false);
-  path.setMode(ofPath::POLYLINES);
   path.setFilled(true);
 
   return path;
 }
 
+std::vector<ofPath> NeuroFont::getStrPaths(std::string const & str) {
+  std::vector<ofPath> paths = fontSrc.getStringAsPoints(str, true, false);
+  for (ofPath & path : paths) {
+    path.setFilled(true);
+  }
+
+  return paths;
+}
+
 ofPath NeuroFont::updatePath(ofPath const & path, float size) {
   ofPath newPath;
-  newPath.setMode(ofPath::POLYLINES);
 
   std::vector<ofPolyline> polylines = path.getOutline();
   for (ofPolyline & polyline : polylines) {
@@ -96,4 +104,27 @@ ofPath NeuroFont::updatePath(ofPath const & path, float size) {
   newPath.scale(scale, scale);
 
   return newPath;
+}
+
+std::vector<ofPath> NeuroFont::updatePaths(std::vector<ofPath> const & paths, float size) {
+  std::vector<ofPath> newPaths;
+
+  for (ofPath path : paths) {
+    ofPath newPath = updatePath(path, size);
+    newPaths.push_back(newPath);
+  }
+
+  return newPaths;
+}
+
+ofRectangle NeuroFont::getStringBoundingBox(string const & str, float size) {
+  float scale = size / static_cast<float>(fontSize);
+
+  ofRectangle r = fontSrc.getStringBoundingBox(str, 0, 0);
+  r.x *= scale;
+  r.y *= scale;
+  r.width *= scale;
+  r.height *= scale;
+
+  return r;
 }
