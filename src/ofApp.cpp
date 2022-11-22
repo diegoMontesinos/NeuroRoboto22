@@ -19,6 +19,9 @@ void ofApp::setup() {
   neuroFont.setup("Roboto-Medium.ttf", 180);
 
   updateDimensions();
+  setupGUI();
+
+  address = LocalAddressGrabber::getIpAddress("en0");
 
   // Title
   initialTitlePaths = neuroFont.getStrPaths("Neuro\nRoboto");
@@ -41,8 +44,40 @@ void ofApp::setup() {
   headModel.loadModel("head.obj");
   headModel.setScale(0.68, 0.68, 0.68);
   headModel.setPosition(0, 0, 10);
-
   headModel.setRotation(1, -20, 0, 1, 0);
+}
+
+void ofApp::setupGUI() {
+  gui.setup();
+  gui.add(titlePosX.setup("titlePosX", 0.025, 0.0, 1.0));
+  gui.add(titlePosY.setup("titlePosY", 0.12, 0.0, 1.0));
+  gui.add(infoPosX.setup("infoPosX", 0.025, 0.0, 1.0));
+  gui.add(infoPosY.setup("infoPosY", 0.28, 0.0, 1.0));
+  gui.add(specimenPosX.setup("specimenPosX", 0.7, 0.0, 1.0));
+  gui.add(specimenPosY.setup("specimenPosY", 0.14, 0.0, 1.0));
+  gui.add(levelsPosX.setup("levelsPosX", 0.025, 0.0, 1.0));
+  gui.add(levelsPosY.setup("levelsPosY", 0.66, 0.0, 1.0));
+  gui.add(levelsW.setup("levelsW", 0.19, 0.0, 1.0));
+  gui.add(levelsH.setup("levelsH", 0.04, 0.0, 1.0));
+  gui.add(graphsPosX.setup("graphsPosX", 0.46, 0.0, 1.0));
+  gui.add(graphsPosY.setup("graphsPosY", 0.62, 0.0, 1.0));
+  gui.add(graphsW.setup("graphsW", 0.42, 0.0, 1.0));
+  gui.add(graphsH.setup("graphsH", 0.22, 0.0, 1.0));
+
+  titlePosX.addListener(this, &ofApp::onSliderChange);
+  titlePosY.addListener(this, &ofApp::onSliderChange);
+  infoPosX.addListener(this, &ofApp::onSliderChange);
+  infoPosY.addListener(this, &ofApp::onSliderChange);
+  specimenPosX.addListener(this, &ofApp::onSliderChange);
+  specimenPosY.addListener(this, &ofApp::onSliderChange);
+  levelsPosX.addListener(this, &ofApp::onSliderChange);
+  levelsPosY.addListener(this, &ofApp::onSliderChange);
+  levelsW.addListener(this, &ofApp::onSliderChange);
+  levelsH.addListener(this, &ofApp::onSliderChange);
+  graphsPosX.addListener(this, &ofApp::onSliderChange);
+  graphsPosY.addListener(this, &ofApp::onSliderChange);
+  graphsW.addListener(this, &ofApp::onSliderChange);
+  graphsH.addListener(this, &ofApp::onSliderChange);
 }
 
 void ofApp::update() {
@@ -72,10 +107,19 @@ void ofApp::draw() {
   drawInfo();
   drawSpecimen();
   drawLevels();
-  // drawGraphs();
+  drawGraphs();
 
   if (muse.status.hasBadConnection()) {
     drawBadConnection();
+  }
+
+  if (showDebug) {
+    gui.draw();
+
+    stringstream ss;
+    ss << "FPS: " << ofToString(ofGetFrameRate(), 0) << endl;
+    ss << "IP: " << address << endl;
+    ofDrawBitmapString(ss.str().c_str(), 20, 20);
   }
 }
 
@@ -174,6 +218,17 @@ void ofApp::drawLevel(float level, string const & label) {
   levelsFont.drawString(label, 0, levelRect.height + levelsSize + 10);
 }
 
+void ofApp::drawGraphs() {
+  ofPushStyle();
+  
+  ofNoFill();
+  ofSetColor(255);
+  
+  ofDrawRectangle(graphsRect);
+  
+  ofPopStyle();
+}
+
 void ofApp::drawBadConnection() {
 }
 
@@ -181,26 +236,39 @@ void ofApp::updateDimensions() {
   float w = ofGetWidth();
   float h = ofGetHeight();
 
-  titlePos.x = w * 0.025;
-  titlePos.y = h * 0.14;
+  titlePos.x = w * titlePosX;
+  titlePos.y = h * titlePosY;
 
-  infoPos.x = w * 0.03;
-  infoPos.y = h * 0.3;
+  infoPos.x = w * infoPosX;
+  infoPos.y = h * infoPosY;
 
-  specimenPos.x = w * 0.5;
-  specimenPos.y = h * 0.1;
+  specimenPos.x = w * specimenPosX;
+  specimenPos.y = h * specimenPosY;
 
-  levelsPos.x = w * 0.03;
-  levelsPos.y = h * 0.6;
+  levelsPos.x = w * levelsPosX;
+  levelsPos.y = h * levelsPosY;
+  levelRect.width = w * levelsW;
+  levelRect.height = h * levelsH;
 
-  levelRect.width = w * 0.24;
-  levelRect.height = h * 0.04;
+  graphsRect.x = w * graphsPosX;
+  graphsRect.y = h * graphsPosY;
+  graphsRect.width = w * graphsW;
+  graphsRect.height = h * graphsH;
 }
 
 void ofApp::keyReleased(int key) {
   if (key == F_KEY) {
     ofToggleFullscreen();
+    updateDimensions();
   }
+
+  if (key == D_KEY) {
+    showDebug = !showDebug;
+  }
+}
+
+void ofApp::onSliderChange(float& f) {
+  updateDimensions();
 }
 
 void ofApp::windowResized(int w, int h) {
