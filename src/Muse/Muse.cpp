@@ -226,7 +226,7 @@ float Muse::getMellow() const {
 }
 
 float Muse::getConcentration() const {
-  return getSignalValue(concentrationValues, 100.0);
+  return getSignalValue(concentrationValues, 0.0);
 }
 
 float Muse::getStress() const {

@@ -8,7 +8,7 @@ const vector<string> ofApp::SPECIMEN_ROWS = {
   "k  l  m  n  o  p  q  r  s  t",
   "u  v  w  x  y  z",
   "0  1  2  3  4  5  6  7  8  9",
-  "@  #  *  +  -  ?  !"
+  "@  #  *  +  -  ? ¡ !"
 };
 
 void ofApp::setup() {
@@ -16,7 +16,7 @@ void ofApp::setup() {
   ofSetVerticalSync(true);
 
   muse.setup();
-  neuroFont.setup("RobotoMono-Regular.ttf", 100);
+  neuroFont.setup("Roboto-Medium.ttf", 180);
 
   updateDimensions();
 
@@ -25,7 +25,7 @@ void ofApp::setup() {
   titlePaths = initialTitlePaths;
 
   // Info
-  infoFont.load("RobotoMono-Regular.ttf", 22, true, true, true);
+  infoFont.load("RobotoMono-Regular.ttf", infoSize, true, true, true);
 
   // Specimen
   for (string specimenRow : SPECIMEN_ROWS) {
@@ -33,6 +33,9 @@ void ofApp::setup() {
     initialSpecimenPaths.push_back(rowPaths);
     specimenPaths.push_back(rowPaths);
   }
+
+  // Levels
+  levelsFont.load("RobotoMono-Regular.ttf", levelsSize, true, true, true);
 
   // Head
   headModel.loadModel("head.obj");
@@ -45,20 +48,18 @@ void ofApp::setup() {
 void ofApp::update() {
   muse.update();
 
-  if (muse.status.hasBadConnection()) {
-    return;
-  }
-
   neuroFont.update(muse);
 
-  headModel.setRotation(0, muse.rotation.x, 1, 0, 0);
-  headModel.setRotation(1, muse.rotation.y, 0, 1, 0);
+  if (!muse.status.hasBadConnection()) {
+    headModel.setRotation(0, muse.rotation.x, 1, 0, 0);
+    headModel.setRotation(1, muse.rotation.y, 0, 1, 0);
+  }
 
-  titlePaths = neuroFont.updatePaths(initialTitlePaths, 100);
+  titlePaths = neuroFont.updatePaths(initialTitlePaths, titleSize);
 
   specimenPaths.clear();
   for (vector<ofPath> specimenRow : initialSpecimenPaths) {
-    vector<ofPath> rowPaths = neuroFont.updatePaths(specimenRow, 36);
+    vector<ofPath> rowPaths = neuroFont.updatePaths(specimenRow, specimenSize);
     specimenPaths.push_back(rowPaths);
   }
 }
@@ -69,8 +70,9 @@ void ofApp::draw() {
   drawHead();
   drawTitle();
   drawInfo();
-
   drawSpecimen();
+  drawLevels();
+  // drawGraphs();
 
   if (muse.status.hasBadConnection()) {
     drawBadConnection();
@@ -97,7 +99,7 @@ void ofApp::drawInfo() {
   info << "Intervención experimental" << endl;
   info << "de la tipografía Roboto.";
 
-  infoFont.drawStringAsShapes(info.str(), infoPos.x, infoPos.y);
+  infoFont.drawString(info.str(), infoPos.x, infoPos.y);
 }
 
 void ofApp::drawHead() {
@@ -126,7 +128,7 @@ void ofApp::drawSpecimen() {
 
   for (int i = 0; i < specimenPaths.size(); i++) {
     vector<ofPath> rowPaths = specimenPaths[i];
-    ofRectangle r = neuroFont.getStringBoundingBox(SPECIMEN_ROWS[i], 36);
+    ofRectangle r = neuroFont.getStringBoundingBox(SPECIMEN_ROWS[i], specimenSize);
 
     ofPushMatrix();
     ofTranslate(floor(-r.width * 0.5f), 0);
@@ -135,10 +137,41 @@ void ofApp::drawSpecimen() {
     }
     ofPopMatrix();
 
-    ofTranslate(0, 66);
+    ofTranslate(0, specimenSize * 1.25f);
   }
 
   ofPopMatrix();
+}
+
+void ofApp::drawLevels() {
+  ofPushStyle();
+  ofPushMatrix();
+
+  ofTranslate(levelsPos);
+  ofSetColor(250);
+
+  drawLevel(muse.getMellow() / 100.0, "Tranquilidad");
+  ofTranslate(0, levelRect.height * 2.25);
+
+  drawLevel(muse.getConcentration() / 100.0, "Concentración");
+  ofTranslate(0, levelRect.height * 2.25);
+
+  drawLevel(ofClamp(muse.getStress(), 0, 100) / 100.0, "Estrés");
+
+  ofPopMatrix();
+  ofPopStyle();
+}
+
+void ofApp::drawLevel(float level, string const & label) {
+  ofSetLineWidth(4.0);
+  ofNoFill();
+  ofDrawRectangle(levelRect);
+
+  ofFill();
+  ofSetLineWidth(1.0);
+
+  ofDrawRectangle(2, 0, level * (levelRect.width - 4), levelRect.height);
+  levelsFont.drawString(label, 0, levelRect.height + levelsSize + 10);
 }
 
 void ofApp::drawBadConnection() {
@@ -154,8 +187,14 @@ void ofApp::updateDimensions() {
   infoPos.x = w * 0.03;
   infoPos.y = h * 0.3;
 
-  specimenPos.x = w * 0.7;
-  specimenPos.y = h * 0.18;
+  specimenPos.x = w * 0.5;
+  specimenPos.y = h * 0.1;
+
+  levelsPos.x = w * 0.03;
+  levelsPos.y = h * 0.6;
+
+  levelRect.width = w * 0.24;
+  levelRect.height = h * 0.04;
 }
 
 void ofApp::keyReleased(int key) {

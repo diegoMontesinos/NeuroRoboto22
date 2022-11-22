@@ -11,7 +11,7 @@
 void NeuroFont::setup(std::string const & fontName, int const size) {
   fontSize = size;
   fontSrc.load(fontName, fontSize, false, false, true);
-  fontSrc.setLineHeight(116);
+  fontSrc.setLineHeight(fontSrc.getLineHeight() * 0.76);
 }
 
 void NeuroFont::update(Muse const & muse) {
@@ -22,15 +22,15 @@ void NeuroFont::update(Muse const & muse) {
 
 void NeuroFont::concentration(Muse const & muse) {
   float concentration = muse.getConcentration();
-  spacing = ofMap(concentration, 0, 100, 7.0, 4.0);
+  spacing = ofMap(concentration, 0, 100.0, 16.0, 4.0);
 }
 
 void NeuroFont::mellow(Muse const & muse) {
   float alpha = muse.getAlpha();
   float mellow = muse.getMellow();
 
+  ampCos = ofMap(abs(alpha), 0.1, 0.7, 0.5, 8.0);
   ampSin = ofMap(mellow, 0, 100, 0.5, 4.0);
-  ampCos = ofMap(abs(alpha), 0, 1.0, 0.5, 8.0);
 }
 
 void NeuroFont::stress(Muse const & muse) {
@@ -39,11 +39,11 @@ void NeuroFont::stress(Muse const & muse) {
   float gamma = muse.getGamma();
   float stress = muse.getStress();
 
-  noiseStep = ofMap(abs(beta), 0.0, 1.0, 1.0, 16.0);
-  noiseScale = ofMap(stress, -1.0, 1.0, 1.0, 5.0);
-  
-  offsetX = ofMap(abs(gamma), 0.0, 1.0, 0.03, 0.07);
-  offsetY = ofMap(abs(theta), 0.0, 1.0, 0.04, 0.06);
+  noiseStep = ofMap(abs(beta), 0.1, 0.7, 2.0, 8.0);
+  noiseScale = ofMap(abs(stress), 0.0, 1.0, 0.0, 4.0);
+
+  offsetX = ofMap(abs(gamma), 0.0, 0.5, 0.04, 0.1);
+  offsetY = ofMap(abs(theta), 0.0, 1.0, 0.04, 0.1);
 }
 
 ofPath NeuroFont::getCharPath(uint32_t character) {

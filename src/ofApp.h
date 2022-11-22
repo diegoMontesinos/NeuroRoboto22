@@ -18,19 +18,28 @@ class ofApp : public ofBaseApp
     ofxAssimpModelLoader headModel;
 
     // Title
+    float titleSize = 94;
     glm::vec2 titlePos;
     vector<ofPath> initialTitlePaths;
     vector<ofPath> titlePaths;
 
     // Info
+    int infoSize = 28;
     glm::vec2 infoPos;
     ofTrueTypeFont infoFont;
 
     // Especimen
+    float specimenSize = 50;
     glm::vec2 specimenPos;
     static const vector<string> SPECIMEN_ROWS;
     vector<vector<ofPath>> initialSpecimenPaths;
     vector<vector<ofPath>> specimenPaths;
+
+    // Levels
+    int levelsSize = 24;
+    glm::vec2 levelsPos;
+    ofRectangle levelRect;
+    ofTrueTypeFont levelsFont;
 
     void updateDimensions();
 
@@ -38,6 +47,8 @@ class ofApp : public ofBaseApp
     void drawInfo();
     void drawHead();
     void drawSpecimen();
+    void drawLevels();
+    void drawLevel(float level, string const &  label);
     void drawBadConnection();
 
   public:
