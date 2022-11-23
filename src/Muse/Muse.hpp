@@ -78,8 +78,20 @@ class Muse
 
     vec3 rotation;
 
+    bool hasNewData;
+
     void setup();
     void update();
+
+    vector<float> getAlphaValues() const { return alphaValues; }
+    vector<float> getBetaValues() const { return betaValues; }
+    vector<float> getDeltaValues() const { return deltaValues; }
+    vector<float> getThetaValues() const { return thetaValues; }
+    vector<float> getGammaValues() const { return gammaValues; }
+
+    vector<float> getMellowValues() const { return mellowValues; }
+    vector<float> getConcentrationValues() const { return concentrationValues; }
+    vector<float> getStressValues() const { return stressValues; }
 
     float getAlpha() const;
     float getBeta() const;

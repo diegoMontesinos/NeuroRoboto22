@@ -68,6 +68,9 @@ class ofApp : public ofBaseApp
     ofxFloatSlider graphsH;
     ofRectangle graphsRect;
 
+    int graphsSize = 12;
+    ofTrueTypeFont graphsFont;
+
     string address;
 
     void setupGUI();
@@ -79,8 +82,9 @@ class ofApp : public ofBaseApp
     void drawHead();
     void drawSpecimen();
     void drawLevels();
-    void drawLevel(float level, string const &  label);
+    void drawLevel(float level, string const & label);
     void drawGraphs();
+    void drawGraph(vector<float> const & values, float min, float max, ofColor color);
     void drawBadConnection();
 
   public:

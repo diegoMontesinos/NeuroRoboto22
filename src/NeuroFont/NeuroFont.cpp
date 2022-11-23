@@ -40,10 +40,10 @@ void NeuroFont::stress(Muse const & muse) {
   float stress = muse.getStress();
 
   noiseStep = ofMap(abs(beta), 0.1, 0.7, 2.0, 8.0);
-  noiseScale = ofMap(abs(stress), 0.0, 1.0, 0.0, 4.0);
+  noiseScale = ofMap(abs(stress), 0.0, 1.0, 0.1, 6.0);
 
-  offsetX = ofMap(abs(gamma), 0.0, 0.5, 0.04, 0.1);
-  offsetY = ofMap(abs(theta), 0.0, 1.0, 0.04, 0.1);
+  offsetX = ofMap(abs(gamma), 0.0, 0.5, 0.045, 0.12);
+  offsetY = ofMap(abs(theta), 0.0, 1.0, 0.045, 0.12);
 }
 
 ofPath NeuroFont::getCharPath(uint32_t character) {

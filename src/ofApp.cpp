@@ -23,24 +23,19 @@ void ofApp::setup() {
 
   address = LocalAddressGrabber::getIpAddress("en0");
 
-  // Title
   initialTitlePaths = neuroFont.getStrPaths("Neuro\nRoboto");
   titlePaths = initialTitlePaths;
 
-  // Info
   infoFont.load("RobotoMono-Regular.ttf", infoSize, true, true, true);
+  levelsFont.load("RobotoMono-Regular.ttf", levelsSize, true, true, true);
+  graphsFont.load("RobotoMono-Regular.ttf", graphsSize, true, true, true);
 
-  // Specimen
   for (string specimenRow : SPECIMEN_ROWS) {
     vector<ofPath> rowPaths = neuroFont.getStrPaths(specimenRow);
     initialSpecimenPaths.push_back(rowPaths);
     specimenPaths.push_back(rowPaths);
   }
 
-  // Levels
-  levelsFont.load("RobotoMono-Regular.ttf", levelsSize, true, true, true);
-
-  // Head
   headModel.loadModel("head.obj");
   headModel.setScale(0.68, 0.68, 0.68);
   headModel.setPosition(0, 0, 10);
@@ -59,10 +54,10 @@ void ofApp::setupGUI() {
   gui.add(levelsPosY.setup("levelsPosY", 0.66, 0.0, 1.0));
   gui.add(levelsW.setup("levelsW", 0.19, 0.0, 1.0));
   gui.add(levelsH.setup("levelsH", 0.04, 0.0, 1.0));
-  gui.add(graphsPosX.setup("graphsPosX", 0.46, 0.0, 1.0));
-  gui.add(graphsPosY.setup("graphsPosY", 0.62, 0.0, 1.0));
-  gui.add(graphsW.setup("graphsW", 0.42, 0.0, 1.0));
-  gui.add(graphsH.setup("graphsH", 0.22, 0.0, 1.0));
+  gui.add(graphsPosX.setup("graphsPosX", 0.48, 0.0, 1.0));
+  gui.add(graphsPosY.setup("graphsPosY", 0.68, 0.0, 1.0));
+  gui.add(graphsW.setup("graphsW", 0.4, 0.0, 1.0));
+  gui.add(graphsH.setup("graphsH", 0.18, 0.0, 1.0));
 
   titlePosX.addListener(this, &ofApp::onSliderChange);
   titlePosY.addListener(this, &ofApp::onSliderChange);
@@ -83,19 +78,21 @@ void ofApp::setupGUI() {
 void ofApp::update() {
   muse.update();
 
-  neuroFont.update(muse);
-
   if (!muse.status.hasBadConnection()) {
+    neuroFont.update(muse);
+
     headModel.setRotation(0, muse.rotation.x, 1, 0, 0);
     headModel.setRotation(1, muse.rotation.y, 0, 1, 0);
-  }
 
-  titlePaths = neuroFont.updatePaths(initialTitlePaths, titleSize);
+    if (muse.hasNewData) {
+      titlePaths = neuroFont.updatePaths(initialTitlePaths, titleSize);
 
-  specimenPaths.clear();
-  for (vector<ofPath> specimenRow : initialSpecimenPaths) {
-    vector<ofPath> rowPaths = neuroFont.updatePaths(specimenRow, specimenSize);
-    specimenPaths.push_back(rowPaths);
+      specimenPaths.clear();
+      for (vector<ofPath> specimenRow : initialSpecimenPaths) {
+        vector<ofPath> rowPaths = neuroFont.updatePaths(specimenRow, specimenSize);
+        specimenPaths.push_back(rowPaths);
+      }
+    }
   }
 }
 
@@ -108,7 +105,6 @@ void ofApp::draw() {
   drawSpecimen();
   drawLevels();
   drawGraphs();
-
   if (muse.status.hasBadConnection()) {
     drawBadConnection();
   }
@@ -200,7 +196,7 @@ void ofApp::drawLevels() {
   drawLevel(muse.getConcentration() / 100.0, "Concentración");
   ofTranslate(0, levelRect.height * 2.25);
 
-  drawLevel(ofClamp(muse.getStress(), 0, 100) / 100.0, "Estrés");
+  drawLevel(ofClamp(muse.getStress(), 0, 1), "Estrés");
 
   ofPopMatrix();
   ofPopStyle();
@@ -220,12 +216,56 @@ void ofApp::drawLevel(float level, string const & label) {
 
 void ofApp::drawGraphs() {
   ofPushStyle();
-  
+  ofPushMatrix();
+
+  ofTranslate(graphsRect.x, graphsRect.y);
+
+  drawGraph(muse.getAlphaValues(), -1, 1, ofColor(56, 109, 232));
+  drawGraph(muse.getBetaValues(), -1, 1, ofColor(28, 156, 60));
+  drawGraph(muse.getDeltaValues(), -1, 1, ofColor(204, 19, 6));
+  drawGraph(muse.getThetaValues(), -1, 1, ofColor(178, 8, 212));
+  drawGraph(muse.getGammaValues(), -1, 1, ofColor(235, 120, 26));
+
+  drawGraph(muse.getMellowValues(), 0, 100, ofColor(12, 98, 245));
+  drawGraph(muse.getConcentrationValues(), 0, 100, ofColor(212, 168, 8));
+  drawGraph(muse.getStressValues(), -1, 1, ofColor(171, 171, 171));
+
+  ofPopMatrix();
+  ofPopStyle();
+}
+
+void ofApp::drawGraph(vector<float> const & values, float min, float max, ofColor color) {
+  long size = values.size();
+  if (size <= 0) {
+    return;
+  }
+
+  float rw = graphsRect.width;
+  float rh = graphsRect.height;
+
+  ofPushStyle();
+  ofSetColor(color);
+  ofSetLineWidth(2.5f);
   ofNoFill();
-  ofSetColor(255);
-  
-  ofDrawRectangle(graphsRect);
-  
+
+  float amtX = rw / static_cast<float>(size - 1);
+
+  ofPolyline polyline;
+  for (int i = 0; i < size; i++) {
+    float x = i * amtX;
+    float y = ofMap(values[i], min, max, rh, 0);
+    polyline.lineTo(x, ofClamp(y, 0, rh));
+  }
+  polyline.draw();
+
+  ofFill();
+  float last = values[size - 1];
+
+  stringstream ss;
+  ss << last << endl;
+  float y = ofMap(last, min, max, rh, 0);
+  graphsFont.drawString(ss.str(), rw + 5, ofClamp(y, 0, rh) + 5);
+
   ofPopStyle();
 }
 

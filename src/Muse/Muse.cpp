@@ -41,6 +41,7 @@ void Muse::setup() {
 }
 
 void Muse::update() {
+  hasNewData = false;
   updateRotation();
 
   while (receiver.hasWaitingMessages()) {
@@ -131,6 +132,7 @@ void Muse::handleDataMessage(ofxOscMessage const & message, vector<float>& list)
   }
 
   list.push_back(data);
+  hasNewData = true;
 }
 
 void Muse::handleGyroscopeMessage(ofxOscMessage const & message) {
