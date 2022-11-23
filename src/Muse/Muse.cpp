@@ -32,16 +32,16 @@ void Muse::setup() {
   ofLog() << "listening for osc messages on port " << OSC_PORT;
   receiver.setup(OSC_PORT);
 
-  filter.begin(25);
-  microsPerReading = 1000000 / 25;
-  microsPrevious = ofGetElapsedTimeMicros();
+  FusionAhrsInitialise(&ahrs);
+  millisPrevious = ofGetElapsedTimeMillis();
 
   rotation.x = 0;
   rotation.y = 0;
+  rotation.z = 0;
 }
 
 void Muse::update() {
-  hasNewData = false;
+  newData = false;
   updateRotation();
 
   while (receiver.hasWaitingMessages()) {
@@ -53,18 +53,20 @@ void Muse::update() {
 }
 
 void Muse::updateRotation() {
-  unsigned long microsNow = ofGetElapsedTimeMicros();
-  if (microsNow - microsPrevious >= microsPerReading) {
-    filter.updateIMU(gyroX, gyroY, gyroZ, accX, accY, accZ);
+  unsigned long now = ofGetElapsedTimeMillis();
+  if (now - millisPrevious >= millisPerReading) {
+    const FusionVector gyroscope = { gyroX, gyroY, gyroZ };
+    const FusionVector accelerometer = { accX, accY, accZ };
 
-    float pitch = filter.getPitch() * -1.0;
-    float yaw = filter.getYaw() + 180;
+    FusionAhrsUpdateNoMagnetometer(&ahrs, gyroscope, accelerometer, millisPerReading / 1000.0f);
 
-    float deltaPitch = (pitch - rotation.x) * 0.075;
-    float deltaYaw = (yaw - rotation.y) * 0.075;
+    const FusionEuler euler = FusionQuaternionToEuler(FusionAhrsGetQuaternion(&ahrs));
 
-    rotation.x += deltaPitch;
-    rotation.y += deltaYaw;
+    rotation.x = euler.angle.pitch * -1.0f;
+    rotation.y = euler.angle.yaw * -1.0f;
+    rotation.z = euler.angle.roll;
+
+    millisPrevious = now;
   }
 }
 
@@ -132,7 +134,7 @@ void Muse::handleDataMessage(ofxOscMessage const & message, vector<float>& list)
   }
 
   list.push_back(data);
-  hasNewData = true;
+  newData = true;
 }
 
 void Muse::handleGyroscopeMessage(ofxOscMessage const & message) {

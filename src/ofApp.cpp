@@ -82,9 +82,10 @@ void ofApp::update() {
     neuroFont.update(muse);
 
     headModel.setRotation(0, muse.rotation.x, 1, 0, 0);
-    headModel.setRotation(1, muse.rotation.y, 0, 1, 0);
+    headModel.setRotation(1, muse.rotation.y - 20, 0, 1, 0);
+    headModel.setRotation(2, muse.rotation.z - 12, 0, 0, 1);
 
-    if (muse.hasNewData) {
+    if (muse.hasNewData()) {
       titlePaths = neuroFont.updatePaths(initialTitlePaths, titleSize);
 
       specimenPaths.clear();

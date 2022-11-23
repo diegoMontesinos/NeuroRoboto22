@@ -7,11 +7,11 @@
 
 #pragma once
 
-#define OSC_PORT 5000
-
 #include "ofxOsc.h"
 #include "MuseStatus.hpp"
-#include "MadgwickAHRS.hpp"
+#include "Fusion.h"
+
+#define OSC_PORT 5000
 
 using std::vector;
 using std::string;
@@ -41,8 +41,9 @@ class Muse
 
     ofxOscReceiver receiver;
 
-    Madgwick filter;
-    unsigned long microsPerReading, microsPrevious;
+    FusionAhrs ahrs;
+    unsigned long millisPerReading = 38;
+    unsigned long millisPrevious;
     float gyroX, gyroY, gyroZ;
     float accX, accY, accZ;
 
@@ -54,8 +55,9 @@ class Muse
 
     vector<float> mellowValues;
     vector<float> concentrationValues;
-
     vector<float> stressValues;
+
+    bool newData;
 
     void updateRotation();
 
@@ -77,8 +79,6 @@ class Muse
     MuseStatus status;
 
     vec3 rotation;
-
-    bool hasNewData;
 
     void setup();
     void update();
@@ -102,4 +102,6 @@ class Muse
     float getMellow() const;
     float getConcentration() const;
     float getStress() const;
+
+    bool hasNewData() const { return newData; }
 };
