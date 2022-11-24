@@ -105,9 +105,6 @@ void ofApp::update() {
   }
 }
 
-void ofApp::updateSimplePath() {
-}
-
 void ofApp::draw() {
   ofBackgroundGradient(ofColor(18), ofColor(8));
 

@@ -86,7 +86,6 @@ class ofApp : public ofBaseApp
     void setupGUI();
 
     void updateDimensions();
-    void updateSimplePath();
 
     void drawTitle();
     void drawInfo();
