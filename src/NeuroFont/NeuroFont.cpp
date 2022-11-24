@@ -22,15 +22,15 @@ void NeuroFont::update(Muse const & muse) {
 
 void NeuroFont::concentration(Muse const & muse) {
   float concentration = muse.getConcentration();
-  spacing = ofMap(concentration, 0, 100.0, 16.0, 4.0);
+  spacing = ofMap(concentration, 0, 100.0, 12.0, 6.0);
 }
 
 void NeuroFont::mellow(Muse const & muse) {
   float alpha = muse.getAlpha();
   float mellow = muse.getMellow();
 
-  ampCos = ofMap(abs(alpha), 0.1, 0.7, 0.5, 8.0);
-  ampSin = ofMap(mellow, 0, 100, 0.5, 4.0);
+  ampCos = ofMap(abs(alpha), 0.1, 0.7, 0.4, 16.0);
+  ampSin = ofMap(mellow, 0, 100, 0.6, 16.0);
 }
 
 void NeuroFont::stress(Muse const & muse) {
@@ -40,10 +40,10 @@ void NeuroFont::stress(Muse const & muse) {
   float stress = muse.getStress();
 
   noiseStep = ofMap(abs(beta), 0.1, 0.7, 2.0, 8.0);
-  noiseScale = ofMap(abs(stress), 0.0, 1.0, 0.1, 6.0);
+  noiseScale = ofMap(abs(stress), 0.0, 1.0, 0.1, 4.0);
 
-  offsetX = ofMap(abs(gamma), 0.0, 0.5, 0.045, 0.12);
-  offsetY = ofMap(abs(theta), 0.0, 1.0, 0.045, 0.12);
+  offsetX = ofMap(abs(gamma), 0.0, 0.5, 0.03, 0.095);
+  offsetY = ofMap(abs(theta), 0.0, 1.0, 0.03, 0.095);
 }
 
 ofPath NeuroFont::getCharPath(uint32_t character) {

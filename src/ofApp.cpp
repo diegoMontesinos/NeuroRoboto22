@@ -40,6 +40,8 @@ void ofApp::setup() {
   headModel.setScale(0.68, 0.68, 0.68);
   headModel.setPosition(0, 0, 10);
   headModel.setRotation(1, -20, 0, 1, 0);
+
+  inputMode = false;
 }
 
 void ofApp::setupGUI() {
@@ -48,6 +50,8 @@ void ofApp::setupGUI() {
   gui.add(titlePosY.setup("titlePosY", 0.12, 0.0, 1.0));
   gui.add(infoPosX.setup("infoPosX", 0.025, 0.0, 1.0));
   gui.add(infoPosY.setup("infoPosY", 0.28, 0.0, 1.0));
+  gui.add(inputPosX.setup("inputPosX", 0.48, 0.0, 1.0));
+  gui.add(inputPosY.setup("inputPosY", 0.1, 0.0, 1.0));
   gui.add(specimenPosX.setup("specimenPosX", 0.7, 0.0, 1.0));
   gui.add(specimenPosY.setup("specimenPosY", 0.14, 0.0, 1.0));
   gui.add(levelsPosX.setup("levelsPosX", 0.025, 0.0, 1.0));
@@ -63,6 +67,8 @@ void ofApp::setupGUI() {
   titlePosY.addListener(this, &ofApp::onSliderChange);
   infoPosX.addListener(this, &ofApp::onSliderChange);
   infoPosY.addListener(this, &ofApp::onSliderChange);
+  inputPosX.addListener(this, &ofApp::onSliderChange);
+  inputPosY.addListener(this, &ofApp::onSliderChange);
   specimenPosX.addListener(this, &ofApp::onSliderChange);
   specimenPosY.addListener(this, &ofApp::onSliderChange);
   levelsPosX.addListener(this, &ofApp::onSliderChange);
@@ -78,16 +84,18 @@ void ofApp::setupGUI() {
 void ofApp::update() {
   muse.update();
 
-  if (!muse.status.hasBadConnection()) {
-    neuroFont.update(muse);
+  neuroFont.update(muse);
 
-    headModel.setRotation(0, muse.rotation.x, 1, 0, 0);
-    headModel.setRotation(1, muse.rotation.y - 20, 0, 1, 0);
-    headModel.setRotation(2, muse.rotation.z - 12, 0, 0, 1);
+  headModel.setRotation(0, muse.rotation.x, 1, 0, 0);
+  headModel.setRotation(1, muse.rotation.y - 20, 0, 1, 0);
+  headModel.setRotation(2, muse.rotation.z - 12, 0, 0, 1);
 
-    if (muse.hasNewData()) {
-      titlePaths = neuroFont.updatePaths(initialTitlePaths, titleSize);
+  if (muse.hasNewData()) {
+    titlePaths = neuroFont.updatePaths(initialTitlePaths, titleSize);
 
+    if (inputMode) {
+      inputPaths = neuroFont.updatePaths(initialInputPaths, specimenSize);
+    } else {
       specimenPaths.clear();
       for (vector<ofPath> specimenRow : initialSpecimenPaths) {
         vector<ofPath> rowPaths = neuroFont.updatePaths(specimenRow, specimenSize);
@@ -97,18 +105,22 @@ void ofApp::update() {
   }
 }
 
+void ofApp::updateSimplePath() {
+}
+
 void ofApp::draw() {
   ofBackgroundGradient(ofColor(18), ofColor(8));
 
   drawHead();
   drawTitle();
   drawInfo();
-  drawSpecimen();
+  if (inputMode) {
+    drawInput();
+  } else {
+    drawSpecimen();
+  }
   drawLevels();
   drawGraphs();
-  if (muse.status.hasBadConnection()) {
-    drawBadConnection();
-  }
 
   if (showDebug) {
     gui.draw();
@@ -127,6 +139,7 @@ void ofApp::drawTitle() {
   ofTranslate(titlePos.x, titlePos.y);
 
   for (ofPath & path : titlePaths) {
+    path.setFillColor(ofColor(250));
     path.draw();
   }
 
@@ -162,6 +175,19 @@ void ofApp::drawHead() {
   ofPopStyle();
 }
 
+void ofApp::drawInput() {
+  ofPushMatrix();
+  ofTranslate(inputPos.x, inputPos.y);
+  ofSetColor(250);
+
+  for (ofPath & path : inputPaths) {
+    path.setFillColor(ofColor(250));
+    path.draw();
+  }
+
+  ofPopMatrix();
+}
+
 void ofApp::drawSpecimen() {
   ofPushMatrix();
   ofTranslate(specimenPos.x, specimenPos.y);
@@ -174,6 +200,7 @@ void ofApp::drawSpecimen() {
     ofPushMatrix();
     ofTranslate(floor(-r.width * 0.5f), 0);
     for (ofPath & path : rowPaths) {
+      path.setFillColor(ofColor(250));
       path.draw();
     }
     ofPopMatrix();
@@ -270,9 +297,6 @@ void ofApp::drawGraph(vector<float> const & values, float min, float max, ofColo
   ofPopStyle();
 }
 
-void ofApp::drawBadConnection() {
-}
-
 void ofApp::updateDimensions() {
   float w = ofGetWidth();
   float h = ofGetHeight();
@@ -282,6 +306,9 @@ void ofApp::updateDimensions() {
 
   infoPos.x = w * infoPosX;
   infoPos.y = h * infoPosY;
+
+  inputPos.x = w * inputPosX;
+  inputPos.y = h * inputPosY;
 
   specimenPos.x = w * specimenPosX;
   specimenPos.y = h * specimenPosY;
@@ -297,14 +324,107 @@ void ofApp::updateDimensions() {
   graphsRect.height = h * graphsH;
 }
 
+void ofApp::exportPDF() {
+  ofCairoRenderer pdf;
+  ofRectangle viewport;
+
+  string timestamp = ofGetTimestampString("%Y-%m-%d-%H-%M-%S");
+  stringstream ss;
+  ss << "exports/neuro-roboto-" << timestamp << ".pdf";
+
+  viewport.set(0, 0, 1360, 960);
+  ofViewport(viewport);
+
+  pdf.setup(ss.str(), ofCairoRenderer::PDF);
+  pdf.viewport(viewport);
+  pdf.setBlendMode(OF_BLENDMODE_ALPHA);
+  pdf.setBackgroundColor(ofColor(255));
+  pdf.setFillMode(OF_FILLED);
+
+  pdf.pushMatrix();
+
+  pdf.scale(1, 1);
+
+  drawStringInPDF(pdf, "NeuroRoboto", 20, 30);
+  drawStringInPDF(pdf, timestamp, 20, 90);
+  drawStringInPDF(pdf, "Tranquilidad: " + to_string(muse.getMellow()), 20, 150);
+  drawStringInPDF(pdf, "Concentracion: " + to_string(muse.getConcentration()), 20, 210);
+  drawStringInPDF(pdf, "Estrés: " + to_string(muse.getStress()), 20, 270);
+
+  if (inputMode) {
+    pdf.translate(120, 150);
+
+    for (ofPath & path : inputPaths) {
+      path.setFillColor(ofColor(5));
+      pdf.draw(path);
+    }
+  } else {
+    pdf.translate(680, specimenSize * 5.0);
+
+    for (int i = 0; i < specimenPaths.size(); i++) {
+      vector<ofPath> rowPaths = specimenPaths[i];
+      ofRectangle r = neuroFont.getStringBoundingBox(SPECIMEN_ROWS[i], specimenSize);
+
+      pdf.pushMatrix();
+      pdf.translate(floor(-r.width * 0.5f), 0);
+      for (ofPath & path : rowPaths) {
+        path.setFillColor(ofColor(5));
+        pdf.draw(path);
+      }
+      pdf.popMatrix();
+
+      pdf.translate(0, specimenSize * 1.35f);
+    }
+  }
+
+  pdf.popMatrix();
+
+  pdf.close();
+  ofViewport(ofRectangle(0, 0, ofGetWidth(), ofGetHeight()));
+}
+
+void ofApp::drawStringInPDF(ofCairoRenderer const & pdf, string str, float x, float y) {
+  vector<ofPath> paths = infoFont.getStringAsPoints(str);
+  for (ofPath & path : paths) {
+    path.setFillColor(ofColor(5));
+    pdf.draw(path, x, y);
+  }
+}
+
 void ofApp::keyReleased(int key) {
-  if (key == F_KEY) {
+  if (key == OF_KEY_F1) {
+    inputMode = !inputMode;
+    if (inputMode) {
+      inputStr.clear();
+      initialInputPaths = neuroFont.getStrPaths(inputStr);
+    }
+  }
+
+  if (key == OF_KEY_F2) {
     ofToggleFullscreen();
     updateDimensions();
   }
 
-  if (key == D_KEY) {
+  if (key == OF_KEY_F3) {
     showDebug = !showDebug;
+  }
+
+  if (key == OF_KEY_F4) {
+    exportPDF();
+  }
+
+  if (inputMode) {
+    if (key == OF_KEY_DEL || key == OF_KEY_BACKSPACE) {
+      inputStr = inputStr.substr(0, inputStr.length() - 1);
+      initialInputPaths = neuroFont.getStrPaths(inputStr);
+    }
+    else if (key == OF_KEY_RETURN) {
+      inputStr += "\n";
+      initialInputPaths = neuroFont.getStrPaths(inputStr);
+    } else {
+      ofUTF8Append(inputStr, key);
+      initialInputPaths = neuroFont.getStrPaths(inputStr);
+    }
   }
 }
 

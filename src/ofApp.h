@@ -40,12 +40,22 @@ class ofApp : public ofBaseApp
     int infoSize = 24;
     ofTrueTypeFont infoFont;
 
+    // Input
+    glm::vec2 inputPos;
+    ofxFloatSlider inputPosX;
+    ofxFloatSlider inputPosY;
+  
+    bool inputMode;
+    string inputStr;
+    vector<ofPath> initialInputPaths;
+    vector<ofPath> inputPaths;
+
     // Especimen
     glm::vec2 specimenPos;
     ofxFloatSlider specimenPosX;
     ofxFloatSlider specimenPosY;
 
-    float specimenSize = 50;
+    float specimenSize = 52;
     static const vector<string> SPECIMEN_ROWS;
     vector<vector<ofPath>> initialSpecimenPaths;
     vector<vector<ofPath>> specimenPaths;
@@ -76,16 +86,20 @@ class ofApp : public ofBaseApp
     void setupGUI();
 
     void updateDimensions();
+    void updateSimplePath();
 
     void drawTitle();
     void drawInfo();
     void drawHead();
+    void drawInput();
     void drawSpecimen();
     void drawLevels();
     void drawLevel(float level, string const & label);
     void drawGraphs();
     void drawGraph(vector<float> const & values, float min, float max, ofColor color);
-    void drawBadConnection();
+
+    void exportPDF();
+    void drawStringInPDF(ofCairoRenderer const & pdf, string str, float x, float y);
 
   public:
     void setup();
